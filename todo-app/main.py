@@ -1,8 +1,7 @@
-from operator import index
-
 from todo_manager import Todo
 import inquirer
 from inquirer import prompt
+
 
 def add_task():
     text = input('Введите текст задачи: ')
@@ -17,24 +16,29 @@ def add_task():
 
     todo.create_todo(text, priority, tags, deadline)
 
+
 def leave():
     global is_active
     is_active = False
 
+
 def nothing(task):
     pass
 
+
 def make_done(task):
-    index = int(task[:2])
-    todo.make_done(index)
+    i = int(task[:2])
+    todo.make_done(i)
+
 
 def delete_task(task):
-    index = int(task[:2])
-    todo.delete_task(index)
+    i = int(task[:2])
+    todo.delete_task(i)
+
 
 def redact_task(task):
-    index = int(task[:2])
-    task = todo.get_task(index)
+    i = int(task[:2])
+    task = todo.get_task(i)
 
     text = input('Введите новый текст задачи: ')
 
@@ -51,23 +55,31 @@ def redact_task(task):
         'tags': tags,
         'deadline': deadline
     }
-    todo.redact_task(index, new_data)
+    todo.redact_task(i, new_data)
 
 
-def show_tasks():
-    tasks_list = todo.show_all_todo()
+def add_deadline(task):
+    i = int(task[:2])
+    task = todo.get_task(i)
+    deadline = input(f'Укажите дедлайн в формате дд-мм-гг (старый - {task['deadline']}): ')
+    todo.add_deadline(i, deadline)
 
+
+def show(tasks_list):
     tasks = [
-            inquirer.List(
-                'tasks',
-                message='Выберите задачу',
-                choices=tasks_list
-            )
-        ]
+        inquirer.List(
+            'tasks',
+            message='Выберите задачу',
+            choices=tasks_list
+        )
+    ]
 
     task = prompt(tasks)['tasks']
 
-    if task != 'Выйти':
+    if task == 'Очистить выполненные':
+        todo.clear_done()
+
+    elif task != 'Выйти':
         tasks_actions_choice = [
             inquirer.List(
                 'tasks_actions_choice',
@@ -82,9 +94,27 @@ def show_tasks():
         if task_action:
             task_action(task)
 
+def show_tasks():
+    tasks_list = todo.show_all_todo()
+    show(tasks_list)
+
+
+def show_overdue():
+    tasks_list = todo.show_overdue()
+    show(tasks_list)
+
+def show_by_tag():
+    all_tags = todo.get_tags()
+    tag = input(f'Выберите тег ({' '.join(all_tags)} ): ')
+    task_list = todo.show_tasks_by_tag(tag)
+    show(task_list)
+
+
 menu_actions = {
     'Добавить задачу': add_task,
     'Показать все задачи': show_tasks,
+    'Показать просроченные задачи': show_overdue,
+    'Показать задачи по тегу': show_by_tag,
     'Выйти': leave,
 }
 
@@ -92,6 +122,7 @@ task_actions = {
     'Отметить выполненной': make_done,
     'Удалить задачу': delete_task,
     'Редактировать задачу': redact_task,
+    'Добавить дедлайн': add_deadline,
     'Выйти': nothing
 }
 

@@ -1,4 +1,6 @@
+import datetime
 import json
+
 
 class Todo:
 
@@ -62,6 +64,7 @@ class Todo:
                 new_task = f'{i} | {task["text"]}'
 
             tasks.append(new_task)
+        tasks.append('Очистить выполненные')
         tasks.append('Выйти')
 
         return tasks
@@ -70,11 +73,13 @@ class Todo:
         data = self.__load()
         data['tasks'][index]['done'] = not data['tasks'][index]['done']
         self.__dump(data)
+        print('Статус задачи обновлен')
 
     def delete_task(self, index):
         data = self.__load()
         data['tasks'].pop(index)
         self.__dump(data)
+        print('Задача успешно удалена')
 
     def get_task(self, index):
         data = self.__load()
@@ -88,4 +93,64 @@ class Todo:
                 data['tasks'][index][k] = v
 
         self.__dump(data)
+        print('Задача успешно обновлена')
 
+    def add_deadline(self, index, deadline):
+        data = self.__load()
+        data['tasks'][index]['deadline'] = deadline
+        self.__dump(data)
+        print('Дедлайн успешно обновлен')
+
+    def show_overdue(self):
+        today_date = datetime.datetime.now()
+
+        data = self.__load()
+        overdue_tasks = []
+
+        for i, task in enumerate(data['tasks']):
+            deadline_string = task['deadline']
+            date_format = '%d-%m-%y'
+            if deadline_string != '':
+                deadline = datetime.datetime.strptime(deadline_string, date_format)
+
+                if deadline < today_date:
+                    if task['done']:
+                        new_task = f'{i} | {task["text"]} - Выполнено'
+                    else:
+                        new_task = f'{i} | {task["text"]}'
+                    overdue_tasks.append(new_task)
+        overdue_tasks.append('Очистить выполненные')
+        overdue_tasks.append('Выйти')
+        return overdue_tasks
+
+    def clear_done(self):
+        data = self.__load()
+        for i, task in enumerate(data['tasks']):
+            if task['done']:
+                data['tasks'].remove(task)
+        self.__dump(data)
+
+    def get_tags(self):
+        data = self.__load()
+        tags = []
+        for task in data['tasks']:
+            for tag in task['tags']:
+                if tag not in tags:
+                    tags.append(tag)
+        return tags
+
+    def show_tasks_by_tag(self, tag):
+        data = self.__load()
+        tasks = []
+        for i, task in enumerate(data['tasks']):
+            if tag in task['tags']:
+                if task['done']:
+                    new_task = f'{i} | {task["text"]} - Выполнено'
+                else:
+                    new_task = f'{i} | {task["text"]}'
+                tasks.append(new_task)
+
+        tasks.append('Очистить выполненные')
+        tasks.append('Выйти')
+
+        return tasks
